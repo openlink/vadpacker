@@ -25,6 +25,8 @@ import os
 import elementtree.ElementTree as ET
 import sys
 import argparse
+import datetime
+import re
 
 # settings
 verbose = False
@@ -118,15 +120,26 @@ def vadWriteFile(s, name, fname):
             val = f.read(4069)
 
 
-def createVad(stickerUrl, s):
+def createVad(stickerUrl, variables, s):
     global prefix
     
     # 1. write a clean text warning
     vadWriteRow(s, 'VAD', 'This file consists of binary data and should not be touched by hands!')
 
     # 2. Write the contents of the sticker
-    with open(stickerUrl) as sticker:
-        vadWriteRow(s, 'STICKER', sticker.read())
+    with open(stickerUrl) as stickerFile:
+        sticker = stickerFile.read()
+        # replace all given variables
+        for key in variables:
+            sticker = sticker.replace('$%s$' % key, variables[key]);
+        # replace well-known variables
+        sticker = sticker.replace('$PACKDATE$', datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
+        # Check if any variable values are missing
+        missingVals = list(set(re.findall('\$([^\$]+)\$', sticker)))
+        if len(missingVals) > 0:
+            print >> sys.stderr, 'Missing variable values: %s' % ', '.join(missingVals)
+            exit(1)
+        vadWriteRow(s, 'STICKER', sticker)
 
     # 3. Write all the files defined in the sticker
     stickerTree = ET.parse(stickerUrl)
@@ -146,6 +159,20 @@ def createVad(stickerUrl, s):
     vadWriteRow(s, 'MD5', ctx.hexdigest())
 
 
+def buildVariableMap(variables):
+    "Converts a list of key=val pairs into a map"
+    values = {}
+    for v in variables:
+        # small hack to work around the fact that argparse gives us a list in a list which I do not understand
+        v = v[0]
+        x = v.split('=')
+        if len(x) != 2:
+          print >> sys.stderr, "Invalid variable value: '%s'. Expecting 'key=val'." % v
+          exit(1)
+        values[x[0]] = x[1]
+    return values
+
+
 def main():
     global verbose
     global prefix
@@ -155,6 +182,7 @@ def main():
     optparser.add_argument('--output', '-o', type=str, required=True, metavar='PATH', dest='output', help='The destination VAD file.')
     optparser.add_argument('--verbose', '-v', action="store_true", dest="verbose", default=False, help="Be verbose about the packing.")
     optparser.add_argument('--prefix', '-p', type=str, default="vad/data/", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. Defaults to "vad/data/"')
+    optparser.add_argument('--var', type=str, nargs='*', metavar='VAR', dest='var', default=[], action="append", help='Set variable values to be replaced in the sticker. Example: --variable VARNAME=xyz')
     optparser.add_argument("stickerfile", type=str, help="The Sticker file for the VAD")
 
     # extract arguments
@@ -166,7 +194,7 @@ def main():
     with open(args.output, "wb") as s:
         if verbose:
             print >> sys.stderr, "Packing VAD file from sticker '%s': %s" % (args.stickerfile, args.output)
-        createVad(args.stickerfile, s)
+        createVad(args.stickerfile, buildVariableMap(args.var), s)
 
 
 if __name__ == "__main__":
