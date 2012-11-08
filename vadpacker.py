@@ -31,6 +31,7 @@ import re
 # settings
 verbose = False
 prefix = "vad/data/"
+targetprefix = ""
 
 # Our hash
 ctx = hashlib.md5()
@@ -109,7 +110,7 @@ def vadWriteFile(s, name, fname):
 
         # write the row contents
         vadWriteChar(s, chr(223))
-        
+
         # write the file size
         vadWriteLong(s, os.path.getsize(fname))
         # write the file contents
@@ -120,13 +121,26 @@ def vadWriteFile(s, name, fname):
             val = f.read(4069)
 
 
-def createVad(stickerUrl, variables, s):
+def createVad(stickerUrl, variables, files, s):
     global prefix
-    
-    # 1. write a clean text warning
+    global targetprefix
+
+    # write a clean text warning
     vadWriteRow(s, 'VAD', 'This file consists of binary data and should not be touched by hands!')
 
-    # 2. Write the contents of the sticker
+    # Create the XML blob of additional files to add
+    resources = ""
+    if len(targetprefix) > 0 and not targetprefix.endswith('/'):
+        targetprefix = targetprefix + '/'
+    for f in files:
+        f = re.sub('^./', '', f)
+        executable = 0
+        if f.endswith('.vsp') or f.endswith('.vspx') or f.endswith('.php'):
+            executable = 1
+        resources += '<file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s%s" dav_owner="dav" dav_grp="administrators" dav_perm="11%d10%d10%dNN" makepath="yes"/>\n' % (f, targetprefix, f, executable, executable, executable);
+
+    # Write the contents of the sticker
+    sticker = ''
     with open(stickerUrl) as stickerFile:
         sticker = stickerFile.read()
         # replace all given variables
@@ -134,6 +148,7 @@ def createVad(stickerUrl, variables, s):
             sticker = sticker.replace('$%s$' % key, variables[key]);
         # replace well-known variables
         sticker = sticker.replace('$PACKDATE$', datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
+        sticker = sticker.replace('</resources>', resources + '</resources>')
         # Check if any variable values are missing
         missingVals = list(set(re.findall('\$([^\$]+)\$', sticker)))
         if len(missingVals) > 0:
@@ -141,8 +156,8 @@ def createVad(stickerUrl, variables, s):
             exit(1)
         vadWriteRow(s, 'STICKER', sticker)
 
-    # 3. Write all the files defined in the sticker
-    stickerTree = ET.parse(stickerUrl)
+    # Write all the files defined in the sticker
+    stickerTree = ET.fromstring(sticker)
     for f in stickerTree.findall("resources/file"):
         resType = f.get("type")
         resSource = f.get("source")
@@ -155,7 +170,7 @@ def createVad(stickerUrl, variables, s):
             print >> sys.stderr, "Packing file %s as %s" % (sourceUri, targetUri)
         vadWriteFile(s, targetUri, sourceUri)
 
-    # 4. Write the md5 hash
+    # Write the md5 hash
     vadWriteRow(s, 'MD5', ctx.hexdigest())
 
 
@@ -176,25 +191,29 @@ def buildVariableMap(variables):
 def main():
     global verbose
     global prefix
+    global targetprefix
 
     # Command line args
     optparser = argparse.ArgumentParser(description="Virtuoso VAD Packer\n(C) 2012 OpenLink Software.")
     optparser.add_argument('--output', '-o', type=str, required=True, metavar='PATH', dest='output', help='The destination VAD file.')
     optparser.add_argument('--verbose', '-v', action="store_true", dest="verbose", default=False, help="Be verbose about the packing.")
     optparser.add_argument('--prefix', '-p', type=str, default="vad/data/", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. Defaults to "vad/data/"')
+    optparser.add_argument('--targetprefix', '-t', type=str, default="", metavar='PREFIX', dest='targetprefix', help='An optional prefix to be used for target_uri values in additional resource entries created through the files list."')
     optparser.add_argument('--var', type=str, nargs='*', metavar='VAR', dest='var', default=[], action="append", help='Set variable values to be replaced in the sticker. Example: --variable VARNAME=xyz')
     optparser.add_argument("stickerfile", type=str, help="The Sticker file for the VAD")
+    optparser.add_argument("files", type=str, nargs="*", default=[], help="An optional list of files to pack in addition to the files in the sticker. vadpacker will create additional resource entries with default permissions (dav, administrators, 111101101NN for vsp and php pages, 110100100NN for all other files) in the packed sticker using the relative paths of the given files.")
 
     # extract arguments
     args = optparser.parse_args()
     verbose = args.verbose
     prefix = args.prefix
+    targetprefix = args.targetprefix
 
     # Open the target file and write the VAD
     with open(args.output, "wb") as s:
         if verbose:
             print >> sys.stderr, "Packing VAD file from sticker '%s': %s" % (args.stickerfile, args.output)
-        createVad(args.stickerfile, buildVariableMap(args.var), s)
+        createVad(args.stickerfile, buildVariableMap(args.var), args.files, s)
 
 
 if __name__ == "__main__":
