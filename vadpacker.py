@@ -22,7 +22,7 @@
 import hashlib
 import struct
 import os
-import elementtree.ElementTree as ET
+import xml.etree.ElementTree as ET
 import sys
 import argparse
 import datetime
