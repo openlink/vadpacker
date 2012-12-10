@@ -27,6 +27,7 @@ import sys
 import argparse
 import datetime
 import re
+import glob
 
 # settings
 verbose = False
@@ -128,17 +129,6 @@ def createVad(stickerUrl, variables, files, s):
     # write a clean text warning
     vadWriteRow(s, 'VAD', 'This file consists of binary data and should not be touched by hands!')
 
-    # Create the XML blob of additional files to add
-    resources = ""
-    if len(targetprefix) > 0 and not targetprefix.endswith('/'):
-        targetprefix = targetprefix + '/'
-    for f in files:
-        f = re.sub('^./', '', f)
-        executable = 0
-        if f.endswith('.vsp') or f.endswith('.vspx') or f.endswith('.php'):
-            executable = 1
-        resources += '<file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s%s" dav_owner="dav" dav_grp="administrators" dav_perm="11%d10%d10%dNN" makepath="yes"/>\n' % (f, targetprefix, f, executable, executable, executable);
-
     # Write the contents of the sticker
     sticker = ''
     with open(stickerUrl) as stickerFile:
@@ -148,13 +138,49 @@ def createVad(stickerUrl, variables, files, s):
             sticker = sticker.replace('$%s$' % key, variables[key]);
         # replace well-known variables
         sticker = sticker.replace('$PACKDATE$', datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
-        sticker = sticker.replace('</resources>', resources + '</resources>')
         # Check if any variable values are missing
         missingVals = list(set(re.findall('\$([^\$]+)\$', sticker)))
         if len(missingVals) > 0:
             print >> sys.stderr, 'Missing variable values: %s' % ', '.join(missingVals)
             exit(1)
-        vadWriteRow(s, 'STICKER', sticker)
+
+    # Change the working dir to the root of the sticker file
+    os.chdir(os.path.dirname(stickerUrl))
+
+    # Expand any wildcards in the sticker's resource list
+    resources = ""
+    stickerTree = ET.fromstring(sticker)
+    for f in stickerTree.findall("resources/file"):
+        overwrite = f.get("overwrite") or 'yes'
+        resType = f.get("type")
+        resSource = f.get("source")
+        targetUri = f.get("target_uri")
+        sourceUri = f.get("source_uri")
+        owner = f.get("dav_owner") or "dav"
+        grp = f.get("dav_grp") or "administrators"
+        perms = f.get("dav_perm")
+
+        # and add a new line for each globbed one
+        for filename in glob.glob(sourceUri):
+            if targetUri.endswith('/'):
+                targetUri += filename
+            resources += '  <file overwrite="%s" type="%s" source="data" source_uri="%s" target_uri="%s" dav_owner="%s" dav_grp="%s" dav_perm="%s" makepath="yes"/>\n' % (overwrite, resType, filename, targetUri, owner, grp, perms);
+
+    # Create the XML blob of additional files to add
+    if len(targetprefix) > 0 and not targetprefix.endswith('/'):
+        targetprefix = targetprefix + '/'
+    for f in files:
+        f = re.sub('^./', '', f)
+        executable = 0
+        if f.endswith('.vsp') or f.endswith('.vspx') or f.endswith('.php'):
+            executable = 1
+        resources += '  <file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s%s" dav_owner="dav" dav_grp="administrators" dav_perm="11%d10%d10%dNN" makepath="yes"/>\n' % (f, targetprefix, f, executable, executable, executable);
+
+    # Replace the resources in the sticker with our expanded ones the dumb way (we want to preserve the original sticker formatting if possible)
+    sticker = re.sub('<resources>.*</resources>', '<resources>\n' + resources + '</resources>\n', sticker, 0, re.DOTALL)
+
+    # Write the final sticker contents
+    vadWriteRow(s, 'STICKER', sticker)
 
     # Write all the files defined in the sticker
     stickerTree = ET.fromstring(sticker)
