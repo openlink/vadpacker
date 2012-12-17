@@ -24,7 +24,7 @@ import struct
 import os
 import elementtree.ElementTree as ET
 import sys
-import argparse
+import optparse
 import datetime
 import re
 import glob
@@ -227,10 +227,9 @@ def createVad(stickerUrl, variables, files, s):
 
 def buildVariableMap(variables):
     "Converts a list of key=val pairs into a map"
+    print >> sys.stderr, variables
     values = {}
     for v in variables:
-        # small hack to work around the fact that argparse gives us a list in a list which I do not understand
-        v = v[0]
         x = v.split('=')
         if len(x) != 2:
           print >> sys.stderr, "Invalid variable value: '%s'. Expecting 'key=val'." % v
@@ -245,26 +244,27 @@ def main():
     global targetprefix
 
     # Command line args
-    optparser = argparse.ArgumentParser(description="Virtuoso VAD Packer\n(C) 2012 OpenLink Software.")
-    optparser.add_argument('--output', '-o', type=str, required=True, metavar='PATH', dest='output', help='The destination VAD file.')
-    optparser.add_argument('--verbose', '-v', action="store_true", dest="verbose", default=False, help="Be verbose about the packing.")
-    optparser.add_argument('--prefix', '-p', type=str, default="vad/data/", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. Defaults to "vad/data/"')
-    optparser.add_argument('--targetprefix', '-t', type=str, default="", metavar='PREFIX', dest='targetprefix', help='An optional prefix to be used for target_uri values in additional resource entries created through the files list."')
-    optparser.add_argument('--var', type=str, nargs='*', metavar='VAR', dest='var', default=[], action="append", help='Set variable values to be replaced in the sticker. Example: --variable VARNAME=xyz')
-    optparser.add_argument("stickerfile", type=str, help="The Sticker file for the VAD")
-    optparser.add_argument("files", type=str, nargs="*", default=[], help="An optional list of files to pack in addition to the files in the sticker. vadpacker will create additional resource entries with default permissions (dav, administrators, 111101101NN for vsp and php pages, 110100100NN for all other files) in the packed sticker using the relative paths of the given files.")
+    optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] stickerfile [files [files ...]]",
+                                      version="Virtuoso VAD Packer 1.0",
+                                      description="(C) 2012 OpenLink Software. Vadpacker can be used to build Virtuoso VAD packages by providing the tool with a sticker file. This sticker file is more of a template as vadpacker supports variable replacement and wildcards for file resources.",
+                                      epilog="The optional list of files at the end will be packed in addition to the files in the sticker. vadpacker will create additional resource entries with default permissions (dav, administrators, 111101101NN for vsp and php pages, 110100100NN for all other files) in the packed sticker using the relative paths of the given files.")
+    optparser.add_option('--output', '-o', type="string", metavar='PATH', dest='output', help='The destination VAD file.')
+    optparser.add_option('--verbose', '-v', action="store_true", dest="verbose", default=False, help="Be verbose about the packing.")
+    optparser.add_option('--prefix', '-p', type="string", default="vad/data/", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. Defaults to "vad/data/"')
+    optparser.add_option('--targetprefix', '-t', type="string", default="", metavar='PREFIX', dest='targetprefix', help='An optional prefix to be used for target_uri values in additional resource entries created through the files list."')
+    optparser.add_option('--var', type="string", metavar='VAR', dest='var', default=[], action="append", help='Set variable values to be replaced in the sticker. Example: --var="VARNAME=xyz" will replace any occurence of $VARNAME$ with "xyz"')
 
     # extract arguments
-    args = optparser.parse_args()
-    verbose = args.verbose
-    prefix = args.prefix
-    targetprefix = args.targetprefix
+    (options, args) = optparser.parse_args()
+    verbose = options.verbose
+    prefix = options.prefix
+    targetprefix = options.targetprefix
 
     # Open the target file and write the VAD
-    with open(args.output, "wb") as s:
+    with open(options.output, "wb") as s:
         if verbose:
-            print >> sys.stderr, "Packing VAD file from sticker '%s': %s" % (args.stickerfile, args.output)
-        createVad(args.stickerfile, buildVariableMap(args.var), args.files, s)
+            print >> sys.stderr, "Packing VAD file from sticker '%s': %s" % (args[0], options.output)
+        createVad(args[0], buildVariableMap(options.var), args[1:], s)
 
 
 if __name__ == "__main__":
