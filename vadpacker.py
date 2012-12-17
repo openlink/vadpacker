@@ -145,7 +145,7 @@ def createVad(stickerUrl, variables, files, s):
             exit(1)
 
     # Change the working dir to the root of the sticker file
-    os.chdir(os.path.dirname(stickerUrl))
+    os.chdir(os.path.dirname(os.path.abspath(stickerUrl)))
 
     # Expand any wildcards in the sticker's resource list
     resources = ""
