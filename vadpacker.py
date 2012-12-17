@@ -37,6 +37,30 @@ targetprefix = ""
 # Our hash
 ctx = hashlib.md5()
 
+def zshglob(pattern):
+  """
+  Some additional globbing inspired by the ZSH shell:
+  - **/ matches any depth dir
+  """
+  if '**/' in pattern:
+    # here we need to glob in every possible subdir
+    # if we for example have pattern "a/**/b/*.txt"
+    # we need to find every subdir of a/ and run glob("a/subdir/b/*.txt")
+    # this includes subsubdirs like glob("a/subdir/subsub/b/*.txt")
+    baseDir = pattern[:pattern.find('**/')]
+    restDir = pattern[pattern.find('**/')+2:]
+
+    # We start with no subdirs
+    r = glob.glob(baseDir + restDir)
+
+    # And then run through all the subdirs we find
+    for path in [x[0] for x in os.walk(baseDir or '.')]:
+      r += glob.glob(path.lstrip('./') + restDir)
+    return r
+  else:
+    return glob.glob(pattern)
+
+
 def vadWriteChar(s, val):
     """
     Writes a single char to a VAD file and
@@ -161,10 +185,11 @@ def createVad(stickerUrl, variables, files, s):
         perms = f.get("dav_perm")
 
         # and add a new line for each globbed one
-        for filename in glob.glob(sourceUri):
+        for filename in zshglob(sourceUri):
             if targetUri.endswith('/'):
                 targetUri += filename
             resources += '  <file overwrite="%s" type="%s" source="data" source_uri="%s" target_uri="%s" dav_owner="%s" dav_grp="%s" dav_perm="%s" makepath="yes"/>\n' % (overwrite, resType, filename, targetUri, owner, grp, perms);
+            targetUri = f.get("target_uri")
 
     # Create the XML blob of additional files to add
     if len(targetprefix) > 0 and not targetprefix.endswith('/'):
