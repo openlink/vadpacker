@@ -227,7 +227,6 @@ def createVad(stickerUrl, variables, files, s):
 
 def buildVariableMap(variables):
     "Converts a list of key=val pairs into a map"
-    print >> sys.stderr, variables
     values = {}
     for v in variables:
         x = v.split('=')
