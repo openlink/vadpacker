@@ -202,7 +202,8 @@ def createVad(stickerUrl, variables, files, s):
         resources += '  <file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s%s" dav_owner="dav" dav_grp="administrators" dav_perm="11%d10%d10%dNN" makepath="yes"/>\n' % (f, targetprefix, f, executable, executable, executable);
 
     # Replace the resources in the sticker with our expanded ones the dumb way (we want to preserve the original sticker formatting if possible)
-    sticker = re.sub('<resources>.*</resources>', '<resources>\n' + resources + '</resources>\n', sticker, 0, re.DOTALL)
+    resEx = re.compile('<resources>.*</resources>', re.DOTALL)
+    sticker = resEx.sub('<resources>\n' + resources + '</resources>\n', sticker, 0)
 
     # Write the final sticker contents
     vadWriteRow(s, 'STICKER', sticker)
