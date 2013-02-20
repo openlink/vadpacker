@@ -56,9 +56,9 @@ def zshglob(pattern):
     # And then run through all the subdirs we find
     for path in [x[0] for x in os.walk(baseDir or '.')]:
       r += glob.glob(path.lstrip('./') + restDir)
-    return r
+    return [f for f in r if os.path.isfile(f)]
   else:
-    return glob.glob(pattern)
+    return [f for f in glob.glob(pattern) if os.path.isfile(f)]
 
 
 def vadWriteChar(s, val):
@@ -146,9 +146,19 @@ def vadWriteFile(s, name, fname):
             val = f.read(4069)
 
 
+def getDefaultPerms(f):
+    executable = 0
+    if f.endswith('.vsp') or f.endswith('.vspx') or f.endswith('.php'):
+        executable = 1
+    return "11%d10%d10%dNN" % (executable, executable, executable)
+
+
 def createVad(stickerUrl, variables, files, s):
     global prefix
     global targetprefix
+
+    # Remember already added resources to avoid duplicates
+    allResources = []
 
     # write a clean text warning
     vadWriteRow(s, 'VAD', 'This file consists of binary data and should not be touched by hands!')
@@ -162,11 +172,7 @@ def createVad(stickerUrl, variables, files, s):
             sticker = sticker.replace('$%s$' % key, variables[key]);
         # replace well-known variables
         sticker = sticker.replace('$PACKDATE$', datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
-        # Check if any variable values are missing
-        missingVals = list(set(re.findall('\$([^\$]+)\$', sticker)))
-        if len(missingVals) > 0:
-            print >> sys.stderr, 'Missing variable values: %s' % ', '.join(missingVals)
-            exit(1)
+        sticker = sticker.replace('$HOME$', os.environ['HOME'])
 
     # Change the working dir to the root of the sticker file
     os.chdir(os.path.dirname(os.path.abspath(stickerUrl)))
@@ -176,8 +182,8 @@ def createVad(stickerUrl, variables, files, s):
     stickerTree = ET.fromstring(sticker)
     for f in stickerTree.findall("resources/file"):
         overwrite = f.get("overwrite") or 'yes'
-        resType = f.get("type")
-        resSource = f.get("source")
+        resType = f.get("type") or 'dav'
+        resSource = f.get("source") or 'data'
         targetUri = f.get("target_uri")
         sourceUri = f.get("source_uri")
         owner = f.get("dav_owner") or "dav"
@@ -185,10 +191,16 @@ def createVad(stickerUrl, variables, files, s):
         perms = f.get("dav_perm")
 
         # and add a new line for each globbed one
-        for filename in zshglob(sourceUri):
+        for path in zshglob(sourceUri):
+            targetUri = targetUri.replace('$f$', os.path.split(path)[1]);
+            targetUri = targetUri.replace('$p$', path);
             if targetUri.endswith('/'):
-                targetUri += filename
-            resources += '  <file overwrite="%s" type="%s" source="data" source_uri="%s" target_uri="%s" dav_owner="%s" dav_grp="%s" dav_perm="%s" makepath="yes"/>\n' % (overwrite, resType, filename, targetUri, owner, grp, perms);
+                targetUri += path
+            if(targetUri in allResources):
+                targetUri = f.get("target_uri")
+                continue
+            allResources.append(targetUri)
+            resources += '  <file overwrite="%s" type="%s" source="data" source_uri="%s" target_uri="%s" dav_owner="%s" dav_grp="%s" dav_perm="%s" makepath="yes"/>\n' % (overwrite, resType, path, targetUri, owner, grp, perms or getDefaultPerms(path));
             targetUri = f.get("target_uri")
 
     # Create the XML blob of additional files to add
@@ -199,11 +211,22 @@ def createVad(stickerUrl, variables, files, s):
         executable = 0
         if f.endswith('.vsp') or f.endswith('.vspx') or f.endswith('.php'):
             executable = 1
-        resources += '  <file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s%s" dav_owner="dav" dav_grp="administrators" dav_perm="11%d10%d10%dNN" makepath="yes"/>\n' % (f, targetprefix, f, executable, executable, executable);
+        targetUri = targetprefix + f
+        if(targetUri in allResources):
+            continue
+        allResources.append(targetUri)
+        resources += '  <file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s" dav_owner="dav" dav_grp="administrators" dav_perm="%s" makepath="yes"/>\n' % (f, targetUri, getDefaultPerms(f));
 
     # Replace the resources in the sticker with our expanded ones the dumb way (we want to preserve the original sticker formatting if possible)
     resEx = re.compile('<resources>.*</resources>', re.DOTALL)
     sticker = resEx.sub('<resources>\n' + resources + '</resources>\n', sticker, 0)
+
+    # Check if any variable values are missing
+    missingVals = list(set(re.findall('\$([^\$]+)\$', sticker)))
+    if len(missingVals) > 0:
+        print >> sys.stderr, 'Missing variable values: %s' % ', '.join(missingVals)
+        exit(1)
+
 
     # Write the final sticker contents
     vadWriteRow(s, 'STICKER', sticker)
