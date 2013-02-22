@@ -160,6 +160,9 @@ def createVad(stickerUrl, variables, files, s):
     # Remember already added resources to avoid duplicates
     allResources = []
 
+    # Remember used variables for warnings
+    usedVariables = []
+
     # write a clean text warning
     vadWriteRow(s, 'VAD', 'This file consists of binary data and should not be touched by hands!')
 
@@ -169,10 +172,18 @@ def createVad(stickerUrl, variables, files, s):
         sticker = stickerFile.read()
         # replace all given variables
         for key in variables:
-            sticker = sticker.replace('$%s$' % key, variables[key]);
+            tmpSticker = sticker.replace('$%s$' % key, variables[key]);
+            if tmpSticker != sticker:
+                usedVariables.append(key)
+            sticker = tmpSticker
         # replace well-known variables
         sticker = sticker.replace('$PACKDATE$', datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
         sticker = sticker.replace('$HOME$', os.environ['HOME'])
+
+    # See if any of the given variables was not used and print a warning about it
+    for key in variables:
+      if key not in usedVariables:
+        print >> sys.stderr, 'WARNING: Unused sticker variable: "%s"' % key
 
     # Change the working dir to the root of the sticker file
     os.chdir(os.path.dirname(os.path.abspath(stickerUrl)))
