@@ -61,6 +61,19 @@ files in the `images` folder, meaning `**/` expands to any sub-folder and the em
 _Tip:_ If the source files reside in a subfolder which should not be included in the target urls, then the *--prefix*
 option is the solution. Using it is comparable to changing into the directory and then executing vadpacker.
 
+
+Resource selection via Inline Scripts
+-------------------------------------
+
+A powerful but also potentially dangerous feature of the vadpacker is the selection of resources via arbitrary shell
+script execution. This is achieved by replacing the source_uri pattern with a shell command like in the following
+example:
+
+    <resource source_uri="`find . -name "*.png"|grep -v "notme.png"`" target_uri="images/" />
+
+This will find all .png files in the current folder excluding any file named *notme.png*.
+
+
 Default Resource Values
 -----------------------
 

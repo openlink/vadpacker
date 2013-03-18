@@ -28,6 +28,7 @@ import optparse
 import datetime
 import re
 import glob
+import subprocess;
 
 # settings
 verbose = False
@@ -42,7 +43,14 @@ def zshglob(pattern):
   Some additional globbing inspired by the ZSH shell:
   - **/ matches any depth dir
   """
-  if '**/' in pattern:
+  if '`' in pattern:
+    # We execute a shell command to generate the list of files
+    try:
+      return subprocess.check_output(pattern.replace('`', ''), shell=True).splitlines()
+    except OSError as e:
+      print >> sys.stderr, 'Failed to execute file glob shell command: %s: "%s"' % (pattern.replace('`', ''), e);
+      exit(1)
+  elif '**/' in pattern:
     # here we need to glob in every possible subdir
     # if we for example have pattern "a/**/b/*.txt"
     # we need to find every subdir of a/ and run glob("a/subdir/b/*.txt")
