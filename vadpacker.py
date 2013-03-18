@@ -177,9 +177,6 @@ def createSticker(stickerUrl, variables, files):
     # Remember used variables for warnings
     usedVariables = []
 
-    # write a clean text warning
-    vadWriteRow(s, 'VAD', 'This file consists of binary data and should not be touched by hands!')
-
     # Write the contents of the sticker
     sticker = ''
     with open(stickerUrl) as stickerFile:
@@ -254,6 +251,12 @@ def createSticker(stickerUrl, variables, files):
         print >> sys.stderr, 'Missing variable values: %s' % ', '.join(missingVals)
         exit(1)
 
+    return sticker
+
+
+def createVad(basePath, sticker, s):
+    # write a clean text warning
+    vadWriteRow(s, 'VAD', 'This file consists of binary data and should not be touched by hands!')
 
     # Write the final sticker contents
     vadWriteRow(s, 'STICKER', sticker)
@@ -303,6 +306,7 @@ def main():
     optparser.add_option('--prefix', '-p', type="string", default="", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. This prefix is prepended to all resource source_uris in the sticker template. The final target_uri will not contain the prefix."')
     optparser.add_option('--targetprefix', '-t', type="string", default="", metavar='PREFIX', dest='targetprefix', help='An optional prefix to be used for target_uri values in additional resource entries created through the files list."')
     optparser.add_option('--var', type="string", metavar='VAR', dest='var', default=[], action="append", help='Set variable values to be replaced in the sticker. Example: --var="VARNAME=xyz" will replace any occurence of $VARNAME$ with "xyz"')
+    optparser.add_option('--print-sticker', action="store_true", dest="printsticker", default=False, help="Do not pack the vad, only print the final sticker to stdout.")
 
     # extract arguments
     (options, args) = optparser.parse_args()
@@ -310,11 +314,18 @@ def main():
     prefix = options.prefix
     targetprefix = options.targetprefix
 
-    # Open the target file and write the VAD
-    with open(options.output, "wb") as s:
-        if verbose:
-            print >> sys.stderr, "Packing VAD file from sticker '%s': %s" % (args[0], options.output)
-        createVad(args[0], buildVariableMap(options.var), args[1:], s)
+    stickerUrl = args[0]
+    if verbose:
+        print >> sys.stderr, "Creating sticker file from template '%s'" % stickerUrl
+    sticker = createSticker(stickerUrl, buildVariableMap(options.var), args[1:])
+    if options.printsticker:
+        print sticker
+    else:
+        # Open the target file and write the VAD
+        with open(options.output, "wb") as s:
+            if verbose:
+                print >> sys.stderr, "Packing VAD file '%s'" % ()
+            createVad(os.path.dirname(os.path.realpath(stickerUrl)), sticker, s)
 
 
 if __name__ == "__main__":
