@@ -31,7 +31,7 @@ import glob
 
 # settings
 verbose = False
-prefix = "vad/data/"
+prefix = ""
 targetprefix = ""
 
 # Our hash
@@ -153,9 +153,15 @@ def getDefaultPerms(f):
     return "11%d10%d10%dNN" % (executable, executable, executable)
 
 
-def createVad(stickerUrl, variables, files, s):
-    global prefix
+def createSticker(stickerUrl, variables, files):
+    """
+    Create the final sticker from sticker template, variables, and additional files.
+    Returns a string containing the final sticker
+    """
     global targetprefix
+    global prefix
+    if len(prefix) > 0 and not prefix.endswith('/'):
+      prefix = prefix + '/'
 
     # Remember already added resources to avoid duplicates
     allResources = []
@@ -202,11 +208,13 @@ def createVad(stickerUrl, variables, files, s):
         perms = f.get("dav_perm")
 
         # and add a new line for each globbed one
-        for path in zshglob(sourceUri):
+        for path in zshglob(prefix + sourceUri):
+            # The stripped path takes the prefix into account which is never used in target URLs
+            strippedPath = path[len(prefix):];
             targetUri = targetUri.replace('$f$', os.path.split(path)[1]);
-            targetUri = targetUri.replace('$p$', path);
+            targetUri = targetUri.replace('$p$', strippedPath);
             if targetUri.endswith('/'):
-                targetUri += path
+                targetUri += strippedPath
             if(targetUri in allResources):
                 targetUri = f.get("target_uri")
                 continue
@@ -248,7 +256,7 @@ def createVad(stickerUrl, variables, files, s):
         resType = f.get("type")
         resSource = f.get("source")
         targetUri = f.get("target_uri")
-        sourceUri = f.get("source_uri", "%s/%s%s" % (os.path.dirname(os.path.realpath(stickerUrl)), prefix, targetUri))
+        sourceUri = f.get("source_uri")
         if resSource == "dav":
             print >> sys.stderr, "Cannot handle DAV resources"
             exit(1)
@@ -278,13 +286,13 @@ def main():
     global targetprefix
 
     # Command line args
-    optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] stickerfile [files [files ...]]",
+    optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] stickertmpl [files [files ...]]",
                                       version="Virtuoso VAD Packer 1.0",
-                                      description="(C) 2013 OpenLink Software. Vadpacker can be used to build Virtuoso VAD packages by providing the tool with a sticker file. This sticker file is more of a template as vadpacker supports variable replacement and wildcards for file resources.",
+                                      description="(C) 2013 OpenLink Software. Vadpacker can be used to build Virtuoso VAD packages by providing the tool with a sticker template file. Vadpacker supports variable replacement and wildcards for file resources.",
                                       epilog="The optional list of files at the end will be packed in addition to the files in the sticker. vadpacker will create additional resource entries with default permissions (dav, administrators, 111101101NN for vsp and php pages, 110100100NN for all other files) in the packed sticker using the relative paths of the given files.")
     optparser.add_option('--output', '-o', type="string", metavar='PATH', dest='output', help='The destination VAD file.')
     optparser.add_option('--verbose', '-v', action="store_true", dest="verbose", default=False, help="Be verbose about the packing.")
-    optparser.add_option('--prefix', '-p', type="string", default="vad/data/", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. Defaults to "vad/data/"')
+    optparser.add_option('--prefix', '-p', type="string", default="", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. This prefix is prepended to all resource source_uris in the sticker template. The final target_uri will not contain the prefix."')
     optparser.add_option('--targetprefix', '-t', type="string", default="", metavar='PREFIX', dest='targetprefix', help='An optional prefix to be used for target_uri values in additional resource entries created through the files list."')
     optparser.add_option('--var', type="string", metavar='VAR', dest='var', default=[], action="append", help='Set variable values to be replaced in the sticker. Example: --var="VARNAME=xyz" will replace any occurence of $VARNAME$ with "xyz"')
 

@@ -58,6 +58,8 @@ Finally vadpacker supports *recursive globbing* which is enabled through the usa
 This will recursively find all PNG files and put them into the images folder using the relative path. It includes
 files in the `images` folder, meaning `**/` expands to any sub-folder and the empty string.
 
+_Tip:_ If the source files reside in a subfolder which should not be included in the target urls, then the *--prefix*
+option is the solution. Using it is comparable to changing into the directory and then executing vadpacker.
 
 Default Resource Values
 -----------------------
