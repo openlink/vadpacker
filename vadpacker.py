@@ -56,7 +56,7 @@ def zshglob(pattern):
     # we need to find every subdir of a/ and run glob("a/subdir/b/*.txt")
     # this includes subsubdirs like glob("a/subdir/subsub/b/*.txt")
     baseDir = pattern[:pattern.find('**/')]
-    restDir = pattern[pattern.find('**/')+2:]
+    restDir = pattern[pattern.find('**/')+3:]
 
     # We start with no subdirs
     r = sorted(glob.glob(baseDir + restDir))
