@@ -62,7 +62,7 @@ def zshglob(pattern):
     r = sorted(glob.glob(baseDir + restDir))
 
     # And then run through all the subdirs we find
-    for path in [x[0] for x in os.walk(baseDir or '.')]:
+    for path in sorted([x[0] for x in os.walk(baseDir or '.')]):
       r += sorted(glob.glob(path.lstrip('./') + '/' + restDir))
     return [f for f in r if os.path.isfile(f)]
   else:
