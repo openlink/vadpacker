@@ -59,14 +59,14 @@ def zshglob(pattern):
     restDir = pattern[pattern.find('**/')+2:]
 
     # We start with no subdirs
-    r = glob.glob(baseDir + restDir)
+    r = sorted(glob.glob(baseDir + restDir))
 
     # And then run through all the subdirs we find
     for path in [x[0] for x in os.walk(baseDir or '.')]:
-      r += glob.glob(path.lstrip('./') + restDir)
+      r += sorted(glob.glob(path.lstrip('./') + '/' + restDir))
     return [f for f in r if os.path.isfile(f)]
   else:
-    return [f for f in glob.glob(pattern) if os.path.isfile(f)]
+    return [f for f in sorted(glob.glob(pattern)) if os.path.isfile(f)]
 
 
 def vadWriteChar(s, val):
