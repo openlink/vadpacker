@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #
@@ -297,7 +297,7 @@ def main():
     global targetprefix
 
     # Command line args
-    optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] stickertmpl [files [files ...]]",
+    optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] sticker_template [files [files ...]]",
                                       version="Virtuoso VAD Packer 1.2",
                                       description="(C) 2013 OpenLink Software. Vadpacker can be used to build Virtuoso VAD packages by providing the tool with a sticker template file. Vadpacker supports variable replacement and wildcards for file resources.",
                                       epilog="The optional list of files at the end will be packed in addition to the files in the sticker. vadpacker will create additional resource entries with default permissions (dav, administrators, 111101101NN for vsp and php pages, 110100100NN for all other files) in the packed sticker using the relative paths of the given files.")
@@ -313,6 +313,9 @@ def main():
     verbose = options.verbose
     prefix = options.prefix
     targetprefix = options.targetprefix
+
+    if len(args) < 1:
+        optparser.error("missing sticker_template argument")
 
     stickerUrl = args[0]
     if verbose:
