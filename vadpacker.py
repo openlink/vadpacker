@@ -298,7 +298,7 @@ def main():
 
     # Command line args
     optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] sticker_template [files [files ...]]",
-                                      version="Virtuoso VAD Packer 1.3",
+                                      version="Virtuoso VAD Packer 1.4",
                                       description="Copyright (C) 2012-2018 OpenLink Software. Vadpacker can be used to build Virtuoso VAD packages by providing the tool with a sticker template file. Vadpacker supports variable replacement and wildcards for file resources.",
                                       epilog="The optional list of files at the end will be packed in addition to the files in the sticker. vadpacker will create additional resource entries with default permissions (dav, administrators, 111101101NN for vsp and php pages, 110100100NN for all other files) in the packed sticker using the relative paths of the given files.")
     optparser.add_option('--output', '-o', type="string", metavar='PATH', dest='output', help='The destination VAD file.')
