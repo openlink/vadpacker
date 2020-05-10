@@ -78,34 +78,34 @@ targetprefix = ""
 ctx = hashlib.md5()
 
 def zshglob(pattern):
-  """
-  Some additional globbing inspired by the ZSH shell:
-  - **/ matches any depth dir
-  """
-  if '`' in pattern:
+    """
+    Some additional globbing inspired by the ZSH shell:
+    - **/ matches any depth dir
+    """
+    if '`' in pattern:
     # We execute a shell command to generate the list of files
-    try:
-      return subprocess.check_output(pattern.replace('`', ''), shell=True).splitlines()
-    except OSError as e:
-      logging.error('Failed to execute file glob shell command: %s: "%s"' % (pattern.replace('`', ''), e))
-      exit(1)
-  elif '**/' in pattern:
-    # here we need to glob in every possible subdir
-    # if we for example have pattern "a/**/b/*.txt"
-    # we need to find every subdir of a/ and run glob("a/subdir/b/*.txt")
-    # this includes subsubdirs like glob("a/subdir/subsub/b/*.txt")
-    baseDir = pattern[:pattern.find('**/')]
-    restDir = pattern[pattern.find('**/')+3:]
+        try:
+            return subprocess.check_output(pattern.replace('`', ''), shell=True).splitlines()
+        except OSError as e:
+            logging.error('Failed to execute file glob shell command: %s: "%s"' % (pattern.replace('`', ''), e))
+            exit(1)
+    elif '**/' in pattern:
+        # here we need to glob in every possible subdir
+        # if we for example have pattern "a/**/b/*.txt"
+        # we need to find every subdir of a/ and run glob("a/subdir/b/*.txt")
+        # this includes subsubdirs like glob("a/subdir/subsub/b/*.txt")
+        baseDir = pattern[:pattern.find('**/')]
+        restDir = pattern[pattern.find('**/')+3:]
 
-    # We start with no subdirs
-    r = sorted(glob.glob(baseDir + restDir))
+        # We start with no subdirs
+        r = sorted(glob.glob(baseDir + restDir))
 
-    # And then run through all the subdirs we find
-    for path in sorted([x[0] for x in os.walk(baseDir or '.')]):
-      r += sorted(glob.glob(path.lstrip('./') + '/' + restDir))
-    return [f for f in r if os.path.isfile(f)]
-  else:
-    return [f for f in sorted(glob.glob(pattern)) if os.path.isfile(f)]
+        # And then run through all the subdirs we find
+        for path in sorted([x[0] for x in os.walk(baseDir or '.')]):
+            r += sorted(glob.glob(path.lstrip('./') + '/' + restDir))
+        return [f for f in r if os.path.isfile(f)]
+    else:
+        return [f for f in sorted(glob.glob(pattern)) if os.path.isfile(f)]
 
 
 def vadWriteChar(s, val):
@@ -209,7 +209,7 @@ def createSticker(stickerUrl, variables, files):
     global targetprefix
     global prefix
     if len(prefix) > 0 and not prefix.endswith('/'):
-      prefix = prefix + '/'
+        prefix = prefix + '/'
 
     # Remember already added resources to avoid duplicates
     allResources = []
@@ -223,7 +223,7 @@ def createSticker(stickerUrl, variables, files):
         sticker = stickerFile.read()
         # replace all given variables
         for key in variables:
-            tmpSticker = sticker.replace('$%s$' % key, variables[key]);
+            tmpSticker = sticker.replace('$%s$' % key, variables[key])
             if tmpSticker != sticker:
                 usedVariables.append(key)
             sticker = tmpSticker
@@ -233,8 +233,8 @@ def createSticker(stickerUrl, variables, files):
 
     # See if any of the given variables was not used and print a warning about it
     for key in variables:
-      if key not in usedVariables:
-        logging.warning('WARNING: Unused sticker variable: "%s"' % key)
+        if key not in usedVariables:
+            logging.warning('WARNING: Unused sticker variable: "%s"' % key)
 
     # Change the working dir to the root of the sticker file
     os.chdir(os.path.dirname(os.path.abspath(stickerUrl)))
@@ -255,16 +255,16 @@ def createSticker(stickerUrl, variables, files):
         # and add a new line for each globbed one
         for path in zshglob(prefix + sourceUri):
             # The stripped path takes the prefix into account which is never used in target URLs
-            strippedPath = path[len(prefix):];
-            targetUri = targetUri.replace('$f$', os.path.split(path)[1]);
-            targetUri = targetUri.replace('$p$', strippedPath);
+            strippedPath = path[len(prefix):]
+            targetUri = targetUri.replace('$f$', os.path.split(path)[1])
+            targetUri = targetUri.replace('$p$', strippedPath)
             if targetUri.endswith('/'):
                 targetUri += strippedPath
             if(targetUri in allResources):
                 targetUri = f.get("target_uri")
                 continue
             allResources.append(targetUri)
-            resources += '  <file overwrite="%s" type="%s" source="data" source_uri="%s" target_uri="%s" dav_owner="%s" dav_grp="%s" dav_perm="%s" makepath="yes"/>\n' % (overwrite, resType, path, targetUri, owner, grp, perms or getDefaultPerms(path));
+            resources += '  <file overwrite="%s" type="%s" source="data" source_uri="%s" target_uri="%s" dav_owner="%s" dav_grp="%s" dav_perm="%s" makepath="yes"/>\n' % (overwrite, resType, path, targetUri, owner, grp, perms or getDefaultPerms(path))
             targetUri = f.get("target_uri")
 
     # Create the XML blob of additional files to add
@@ -279,7 +279,7 @@ def createSticker(stickerUrl, variables, files):
         if(targetUri in allResources):
             continue
         allResources.append(targetUri)
-        resources += '  <file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s" dav_owner="dav" dav_grp="administrators" dav_perm="%s" makepath="yes"/>\n' % (f, targetUri, getDefaultPerms(f));
+        resources += '  <file overwrite="yes" type="dav" source="data" source_uri="%s" target_uri="%s" dav_owner="dav" dav_grp="administrators" dav_perm="%s" makepath="yes"/>\n' % (f, targetUri, getDefaultPerms(f))
 
     # Replace the resources in the sticker with our expanded ones the dumb way (we want to preserve the original sticker formatting if possible)
     resEx = re.compile('<resources>.*</resources>', re.DOTALL)
@@ -325,8 +325,8 @@ def buildVariableMap(variables):
     for v in variables:
         x = v.split('=')
         if len(x) != 2:
-          logging.error("Invalid variable value: '%s'. Expecting 'key=val'." % v)
-          exit(1)
+            logging.error("Invalid variable value: '%s'. Expecting 'key=val'." % v)
+            exit(1)
         values[x[0]] = x[1]
     return values
 
