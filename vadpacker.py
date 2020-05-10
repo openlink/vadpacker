@@ -39,6 +39,28 @@ except ImportError:
     import elementtree.ElementTree as ET
 
 
+#
+#  Setup logging
+#
+# set up logging to file - see previous section for more details
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M',
+                    filename='vadpacker.log',
+                    filemode='w')
+
+
+#
+#  Define a handler which writes INFO messages and higher to the sys.stderr
+#
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(levelname)s: %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
+
+
 
 # settings
 verbose = False
@@ -58,7 +80,7 @@ def zshglob(pattern):
     try:
       return subprocess.check_output(pattern.replace('`', ''), shell=True).splitlines()
     except OSError as e:
-      print >> sys.stderr, 'Failed to execute file glob shell command: %s: "%s"' % (pattern.replace('`', ''), e);
+      logging.error('Failed to execute file glob shell command: %s: "%s"' % (pattern.replace('`', ''), e))
       exit(1)
   elif '**/' in pattern:
     # here we need to glob in every possible subdir
@@ -204,7 +226,7 @@ def createSticker(stickerUrl, variables, files):
     # See if any of the given variables was not used and print a warning about it
     for key in variables:
       if key not in usedVariables:
-        print >> sys.stderr, 'WARNING: Unused sticker variable: "%s"' % key
+        logging.warning('WARNING: Unused sticker variable: "%s"' % key)
 
     # Change the working dir to the root of the sticker file
     os.chdir(os.path.dirname(os.path.abspath(stickerUrl)))
@@ -258,7 +280,7 @@ def createSticker(stickerUrl, variables, files):
     # Check if any variable values are missing
     missingVals = list(set(re.findall('\$([^\$]+)\$', sticker)))
     if len(missingVals) > 0:
-        print >> sys.stderr, 'Missing variable values: %s' % ', '.join(missingVals)
+        logging.error('Missing variable values: %s' % ', '.join(missingVals))
         exit(1)
 
     return sticker
@@ -279,10 +301,10 @@ def createVad(basePath, sticker, s):
         targetUri = f.get("target_uri")
         sourceUri = f.get("source_uri")
         if resSource == "dav":
-            print >> sys.stderr, "Cannot handle DAV resources"
+            logging.error("Cannot handle DAV resources")
             exit(1)
         if verbose:
-            print >> sys.stderr, "Packing file %s as %s" % (sourceUri, targetUri)
+            logging.error("Packing file %s as %s" % (sourceUri, targetUri))
         vadWriteFile(s, targetUri, sourceUri)
 
     # Write the md5 hash
@@ -295,7 +317,7 @@ def buildVariableMap(variables):
     for v in variables:
         x = v.split('=')
         if len(x) != 2:
-          print >> sys.stderr, "Invalid variable value: '%s'. Expecting 'key=val'." % v
+          logging.error("Invalid variable value: '%s'. Expecting 'key=val'." % v)
           exit(1)
         values[x[0]] = x[1]
     return values
@@ -329,7 +351,7 @@ def main():
 
     stickerUrl = args[0]
     if verbose:
-        print >> sys.stderr, "Creating sticker file from template '%s'" % stickerUrl
+        logging.info("Creating sticker file from template '%s'" % stickerUrl)
     sticker = createSticker(stickerUrl, buildVariableMap(options.var), args[1:])
     if options.printsticker:
         print sticker
@@ -337,7 +359,7 @@ def main():
         # Open the target file and write the VAD
         with open(options.output, "wb") as s:
             if verbose:
-                print >> sys.stderr, "Packing VAD file '%s'" % ()
+                logging.info("Packing VAD file '%s'" % ())
             createVad(os.path.dirname(os.path.realpath(stickerUrl)), sticker, s)
 
 
