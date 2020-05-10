@@ -22,13 +22,23 @@
 import hashlib
 import struct
 import os
-import elementtree.ElementTree as ET
 import sys
 import optparse
 import datetime
 import re
 import glob
 import subprocess;
+
+
+#
+#  Use xml.etree.ElementTree on python > 2.6
+#
+try:
+    import xml.etree.ElementTree as ET
+except ImportError:
+    import elementtree.ElementTree as ET
+
+
 
 # settings
 verbose = False
