@@ -19,6 +19,8 @@
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 
+from __future__ import print_function
+
 import hashlib
 import struct
 import os
@@ -27,7 +29,7 @@ import optparse
 import datetime
 import re
 import glob
-import subprocess;
+import subprocess
 
 
 #
@@ -62,12 +64,17 @@ logging.getLogger('').addHandler(console)
 
 
 
+#
 # settings
+#
 verbose = False
 prefix = ""
 targetprefix = ""
 
+
+#
 # Our hash
+#
 ctx = hashlib.md5()
 
 def zshglob(pattern):
@@ -142,17 +149,18 @@ def vadWriteString(s, val):
     ctx -- The hash object to update.
     """
     vadWriteLong(s, len(val))
-    s.write(val)
-    ctx.update(val)
+    bytes2 = val.encode()
+    s.write(bytes2)
+    ctx.update(bytes2)
 
 
 def vadWriteRow(s, name, data):
     # write the row name
-    vadWriteChar(s, chr(182))
+    vadWriteChar(s, b'\xb6')
     vadWriteString(s, name)
 
     # write the row contents
-    vadWriteChar(s, chr(223))
+    vadWriteChar(s, b'\xdf')
     vadWriteString(s, data)
 
 
@@ -168,13 +176,13 @@ def vadWriteFile(s, name, fname):
     fname -- The path of the local file.
     ctx -- The hash object to update.
     """
-    with open(fname) as f:
+    with open(fname, 'rb') as f:
         # write the row name
-        vadWriteChar(s, chr(182))
+        vadWriteChar(s, b'\xb6')
         vadWriteString(s, name)
 
         # write the row contents
-        vadWriteChar(s, chr(223))
+        vadWriteChar(s, b'\xdf')
 
         # write the file size
         vadWriteLong(s, os.path.getsize(fname))
@@ -354,7 +362,7 @@ def main():
         logging.info("Creating sticker file from template '%s'" % stickerUrl)
     sticker = createSticker(stickerUrl, buildVariableMap(options.var), args[1:])
     if options.printsticker:
-        print sticker
+        print (sticker)
     else:
         # Open the target file and write the VAD
         with open(options.output, "wb") as s:
