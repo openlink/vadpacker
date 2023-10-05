@@ -314,7 +314,7 @@ def createVad(basePath, sticker, s):
             logging.error("Cannot handle DAV resources")
             exit(1)
         if verbose:
-            logging.error("Packing file %s as %s" % (sourceUri, targetUri))
+            logging.info("Packing file %s as %s" % (sourceUri, targetUri))
         vadWriteFile(s, targetUri, sourceUri)
 
     # Write the md5 hash
@@ -369,7 +369,7 @@ def main():
         # Open the target file and write the VAD
         with open(options.output, "wb") as s:
             if verbose:
-                logging.info("Packing VAD file '%s'" % ())
+                logging.info("Packing VAD file '%s'" % (options.output))
             createVad(os.path.dirname(os.path.realpath(stickerUrl)), sticker, s)
 
 
