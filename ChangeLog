@@ -1,4 +1,17 @@
+2024-03-14  Patrick van Kleef  <pkleef@openlinksw.com>
+
+	Updated version to 1.8
+
+	Fixed issue if source_uri is missing from sticker
+
 2023-10-05  Patrick van Kleef  <pkleef@openlinksw.com>
+
+	Merge tag 'v1.7' into develop
+	Tagged for release
+
+	Merge branch 'release/1.7'
+
+	Updates NEWS and ChangeLog
 
 	Merge branch 'feature/gzip_content' into develop
 
