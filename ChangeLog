@@ -1,4 +1,20 @@
+2024-05-20  Patrick van Kleef  <pkleef@openlinksw.com>
+
+	Updated version to 1.9
+
+	Fixed warning of invalid escape sequence
+
 2024-03-14  Patrick van Kleef  <pkleef@openlinksw.com>
+
+	Merge tag 'v1.8' into develop
+
+	Tagged for release
+
+2024-03-14  Patrick van Kleef  <pkleef@openlinksw.com>
+
+	Merge branch 'release/1.8'
+
+	Updated NEWS and Changelog
 
 	Updated version to 1.8
 
@@ -7,7 +23,10 @@
 2023-10-05  Patrick van Kleef  <pkleef@openlinksw.com>
 
 	Merge tag 'v1.7' into develop
+
 	Tagged for release
+
+2023-10-05  Patrick van Kleef  <pkleef@openlinksw.com>
 
 	Merge branch 'release/1.7'
 
@@ -18,6 +37,7 @@
 2023-10-05  Patrick van Kleef  <pkleef@openlinksw.com>
 
 	Added support for adding files as compressed blobs into the vad
+
 	If the sticker contains a line like this:
 
 	  <file type="$TYPE$" source_uri="owl/*.owl" target_uri="owl/$f$" gzip="yes"/>
@@ -39,7 +59,10 @@
 2023-04-03  Patrick van Kleef  <pkleef@openlinksw.com>
 
 	Merge tag 'v1.6' into develop
+
 	Tagged for release
+
+2023-04-03  Patrick van Kleef  <pkleef@openlinksw.com>
 
 	Merge branch 'release/1.6'
 
@@ -54,7 +77,10 @@
 2020-05-10  Patrick van Kleef  <pkleef@openlinksw.com>
 
 	Merge tag 'v1.5' into develop
+
 	Tagged version 1.5 for release
+
+2020-05-10  Patrick van Kleef  <pkleef@openlinksw.com>
 
 	Merge branch 'release/1.5'
 
@@ -131,14 +157,20 @@
 2013-03-18  Sebastian Trueg  <trueg@kde.org>
 
 	New parameter --print-sticker.
+
 	Using the parameter will result in the sticker being printed to stdout
 	instead of the vad being packaged.
+
+2013-03-18  Sebastian Trueg  <trueg@kde.org>
 
 	Version bump to 1.1.
 
 	Execute arbitrary shell commands to select source uris.
 
+2013-03-18  Sebastian Trueg  <trueg@kde.org>
+
 	Changed the semantics of the --prefix option to something very useful.
+
 	It allows to virtually change into a directly before creating resource
 	tags via globbing.
 
@@ -154,11 +186,16 @@
 
 	Added a short README file for the vadpacker explaining its features.
 
+2013-02-20  Sebastian Trueg  <trueg@kde.org>
+
 	Finer-grained resource globbing control.
+
 	- Support for filename or relative path in target_uri via $f$ and $p$
 	- Avoid duplicates
 	- Sensible defaults for every resource attribute allowing even simpler
 	  sticker templates.
+
+2013-02-20  Sebastian Trueg  <trueg@kde.org>
 
 	* Updated Copyright notice to include 2013 (pvk)
 
@@ -168,9 +205,14 @@
 
 	Removed useless stderr output.
 
+2012-12-17  Sebastian Trueg  <trueg@kde.org>
+
 	Use the deprecated optparse instead of argparse for bw compatibility.
+
 	We need to be able to run vadpacker on those very old systems like
 	CentOS.
+
+2012-12-17  Sebastian Trueg  <trueg@kde.org>
 
 	Added zsh-style globbing to the resource list.
 
@@ -179,6 +221,7 @@
 2012-12-17  Sebastian Trueg  <trueg@kde.org>
 
 	Revert "Use the official version of python ElementTree."
+
 	This reverts commit e065a8e9375cac1ffb63031c5af7c76577a0a5be.
 
 	We need vadpacker to run on versions of Python older than 2.5.
@@ -190,13 +233,17 @@
 2012-11-08  Sebastian Trueg  <trueg@kde.org>
 
 	Automatic file tag creation from file list.
+
 	vadpacker now takes an optional list of files which will be appended
 	to the list of resources already in the sticker.
 	This allows to dynamically generate big parts of the resource list
 	via shell operations.
 	It uses fixed permissions (executable for vsp and php).
 
+2012-11-08  Sebastian Trueg  <trueg@kde.org>
+
 	Use the official version of python ElementTree.
+
 	It has been available since Python 2.5.
 
 2012-11-02  Sebastian Trueg  <trueg@kde.org>
