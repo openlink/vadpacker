@@ -321,7 +321,7 @@ def createSticker(stickerUrl, variables, files):
     sticker = resEx.sub('<resources>\n' + resources + '</resources>\n', sticker, 0)
 
     # Check if any variable values are missing
-    missingVals = list(set(re.findall('\$([^\$]+)\$', sticker)))
+    missingVals = list(set(re.findall(r'\$([^\$]+)\$', sticker)))
     if len(missingVals) > 0:
         logging.error('Missing variable values: %s' % ', '.join(missingVals))
         exit(1)
