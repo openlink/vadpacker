@@ -27,6 +27,7 @@ import hashlib
 import struct
 import os
 import sys
+import platform
 import optparse
 import datetime
 import re
@@ -371,6 +372,13 @@ def main():
     global verbose
     global prefix
     global targetprefix
+
+    #
+    #  Check mimimal python version
+    #
+    if sys.version_info < (2, 7, 5):
+        logging.error("Vadpacker requires Python 2.7.5 or newer instead of Python %s" % platform.python_version())
+        exit (1);
 
     # Command line args
     optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] sticker_template [files [files ...]]",
