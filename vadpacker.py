@@ -43,12 +43,9 @@ import xml.etree.ElementTree as ET
 
 
 #
-#  Use StringIO for python 2.7
+#  Use BytesIO
 #
-try:
-    from StringIO import StringIO	# python 2.7
-except ImportError:
-    pass
+from io import BytesIO
 
 
 #
@@ -193,15 +190,14 @@ def vadWriteFile(s, name, fname, use_gz):
 
         # compress the file if requested
         if use_gz == "yes":
-            if sys.version_info[0] == 3:
-	        # Python 3.x
-                val = gzip.compress (val, compresslevel=9)
-            else:
-	        # Python 2.7
-                buf = StringIO()
+            if sys.version_info > (2, 7):       # Python 2.7 and newer
+                buf = BytesIO()
                 with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=9) as f:
                     f.write(val)
                 val = buf.getvalue()
+            else:
+               raise Exception("use_gzip requires python 2.7 or newer")
+
             if verbose:
                 f_len = os.path.getsize(fname)
                 logging.info("compress: original size=%ld, compressed size=%ld compression=%.2f%%" %
