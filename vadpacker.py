@@ -145,7 +145,7 @@ def vadWriteLong(s, val):
     val -- The value to write.
     ctx -- The hash object to update.
     """
-    be = struct.pack('>i', val)
+    be = struct.pack(str('>i'), val)
     s.write(be)
     ctx.update(be)
 
