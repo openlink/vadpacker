@@ -37,12 +37,9 @@ import gzip
 
 
 #
-#  Use xml.etree.ElementTree on python > 2.6
+#  Use xml.etree.ElementTree
 #
-try:
-    import xml.etree.ElementTree as ET
-except ImportError:
-    import elementtree.ElementTree as ET
+import xml.etree.ElementTree as ET
 
 
 #
