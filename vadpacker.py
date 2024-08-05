@@ -192,7 +192,7 @@ def vadWriteFile(s, name, fname, use_gz):
         if use_gz == "yes":
             if sys.version_info > (2, 7):       # Python 2.7 and newer
                 buf = BytesIO()
-                with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=9) as f:
+                with gzip.GzipFile(fileobj=buf, mode='wb', compresslevel=9, mtime=0) as f:
                     f.write(val)
                 val = buf.getvalue()
             else:
