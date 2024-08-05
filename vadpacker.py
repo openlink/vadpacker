@@ -443,12 +443,25 @@ the given files."""
 
     if options.printsticker:
         print (sticker)
-    else:
+        exit (0)
+
+    try:
         # Open the target file and write the VAD
         with open(options.output, "wb") as s:
             if verbose:
                 logging.info("Packing VAD file '%s'" % (options.output))
             createVad(os.path.dirname(os.path.realpath(stickerUrl)), sticker, s)
+    except Exception as ex:
+        if verbose:
+            logging.exception("Error packing VAD file '%s': %s" % (options.output, ex))
+        else:
+            logging.error("Error packing VAD file '%s': %s" % (options.output, ex))
+        logging.warning ("Removing partial VAD file")
+        os.remove (options.output)
+        exit (1)
+    finally:
+        #  success
+        logging.info ("Vadpacker completed without errors")
 
 
 if __name__ == "__main__":
