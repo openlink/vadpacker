@@ -373,31 +373,74 @@ def main():
         logging.error("Vadpacker requires Python 2.7.5 or newer instead of Python %s" % platform.python_version())
         exit (1);
 
-    # Command line args
-    optparser = optparse.OptionParser(usage="vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX] [--targetprefix PREFIX] [--var [VAR [VAR ...]]] sticker_template [files [files ...]]",
-                                      version="Virtuoso VAD Packer 1.9",
-                                      description="Copyright (C) 2012-2024 OpenLink Software. Vadpacker can be used to build Virtuoso VAD packages by providing the tool with a sticker template file. Vadpacker supports variable replacement and wildcards for file resources.",
-                                      epilog="The optional list of files at the end will be packed in addition to the files in the sticker. vadpacker will create additional resource entries with default permissions (dav, administrators, 111101101NN for vsp and php pages, 110100100NN for all other files) in the packed sticker using the relative paths of the given files.")
-    optparser.add_option('--output', '-o', type="string", metavar='PATH', dest='output', help='The destination VAD file.')
-    optparser.add_option('--verbose', '-v', action="store_true", dest="verbose", default=False, help="Be verbose about the packing.")
-    optparser.add_option('--prefix', '-p', type="string", default="", metavar='PREFIX', dest='prefix', help='An optional prefix to be used for locating local files. This prefix is prepended to all resource source_uris in the sticker template. The final target_uri will not contain the prefix."')
-    optparser.add_option('--targetprefix', '-t', type="string", default="", metavar='PREFIX', dest='targetprefix', help='An optional prefix to be used for target_uri values in additional resource entries created through the files list."')
-    optparser.add_option('--var', type="string", metavar='VAR', dest='var', default=[], action="append", help='Set variable values to be replaced in the sticker. Example: --var="VARNAME=xyz" will replace any occurence of $VARNAME$ with "xyz"')
-    optparser.add_option('--print-sticker', action="store_true", dest="printsticker", default=False, help="Do not pack the vad, only print the final sticker to stdout.")
+    #
+    #  Parse command line args
+    #
+    usage="""\
+vadpacker.py [-h] --output PATH [--verbose] [--prefix PREFIX]
+[--targetprefix PREFIX] [--var [VAR [VAR ...]]] sticker_template
+[files [files ...]]"""
+    description="""\
+Copyright (C) 2012-2024 OpenLink Software. Vadpacker can be used
+to build Virtuoso VAD packages by providing the tool with a sticker
+template file. Vadpacker supports variable replacement and wildcards
+for file resources."""
+    epilog="""\
+The optional list of files at the end will be packed in addition to the
+files in the sticker.
+Vadpacker will create additional resource entries with default permissions
+(dav, administrators, 111101101NN for vsp, vspx, and php pages; 110100100NN
+for all other files) in the packed sticker using the relative paths of
+the given files."""
 
-    # extract arguments
-    (options, args) = optparser.parse_args()
+    #  create parser
+    parser = optparse.OptionParser(
+        usage=usage,
+        version='Virtuoso VAD Packer v1.9',
+        description=description,
+        epilog=epilog
+    )
+
+    #  add options
+    parser.add_option('--output', '-o',
+         type="string", metavar='PATH', dest='output',
+         help='The destination VAD file.')
+
+    parser.add_option('--verbose', '-v',
+         action="store_true", dest="verbose", default=False,
+         help="Be verbose about the packing.")
+
+    parser.add_option('--prefix', '-p',
+         type="string", default="", metavar='PREFIX', dest='prefix',
+         help='An optional prefix to be used for locating local files. This prefix is prepended to all resource source_uris in the sticker template. The final target_uri will not contain the prefix.')
+
+    parser.add_option('--targetprefix', '-t',
+         type="string", default="", metavar='PREFIX', dest='targetprefix',
+         help='An optional prefix to be used for target_uri values in additional resource entries created through the files list.')
+
+    parser.add_option('--var',
+         type="string", metavar='VAR', dest='var', default=[], action="append",
+         help='Set variable values to be replaced in the sticker. Example: --var="VARNAME=xyz" will replace any occurence of $VARNAME$ with "xyz"')
+
+    parser.add_option('--print-sticker',
+         action="store_true", dest="printsticker", default=False,
+         help="Do not pack the vad, only print the final sticker to stdout.")
+
+    #  parse arguments
+    (options, args) = parser.parse_args()
+    if len(args) < 1:
+        parser.error("missing sticker_template argument")
+
+    #  store arguments
     verbose = options.verbose
     prefix = options.prefix
     targetprefix = options.targetprefix
-
-    if len(args) < 1:
-        optparser.error("missing sticker_template argument")
-
     stickerUrl = args[0]
+
     if verbose:
         logging.info("Creating sticker file from template '%s'" % stickerUrl)
     sticker = createSticker(stickerUrl, buildVariableMap(options.var), args[1:])
+
     if options.printsticker:
         print (sticker)
     else:
