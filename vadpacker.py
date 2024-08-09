@@ -437,14 +437,29 @@ the given files."""
     targetprefix = options.targetprefix
     stickerUrl = args[0]
 
-    if verbose:
-        logging.info("Creating sticker file from template '%s'" % stickerUrl)
-    sticker = createSticker(stickerUrl, buildVariableMap(options.var), args[1:])
 
-    if options.printsticker:
-        print (sticker)
-        exit (0)
+    #
+    #  Parse the sticker
+    #
+    try:
+        if verbose:
+            logging.info("Creating sticker from template '%s'" % stickerUrl)
+        sticker = createSticker(stickerUrl, buildVariableMap(options.var), args[1:])
+    except Exception as ex:
+        if verbose:
+            logging.exception("Error parsing sticker template '%s': %s" % (stickerUrl, ex))
+        else:
+            logging.error("Error parsing sticker template '%s': %s" % (stickerUrl, ex))
+        exit (1)
+    finally:
+        if options.printsticker:
+            print (sticker)
+            exit (0)
 
+
+    #
+    #  Generate the VAD package
+    #
     try:
         # Open the target file and write the VAD
         with open(options.output, "wb") as s:
