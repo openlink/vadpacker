@@ -396,7 +396,7 @@ the given files."""
     #  create parser
     parser = optparse.OptionParser(
         usage=usage,
-        version='Virtuoso VAD Packer v1.9',
+        version='Virtuoso VAD Packer v1.10',
         description=description,
         epilog=epilog
     )
