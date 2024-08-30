@@ -1,3 +1,13 @@
+Aug 30, 2024, v1.10:
+  * Added exception handler to catch errors in createSticker()
+  * Added exception handler to catch errors in createVad()
+  * Fixed readability of argument parsing
+  * Fixed use mtime=0 during gzip compression
+  * Fixed use BytesIO and GzipFile for Python 2.7 and newer
+  * Removed old copy of elementtree
+  * Fixed issue with python 2.7.5
+  * Fixed check if we are running Python 2.7.5 or newer
+
 May 20, 2024, v1.9:
   * Fixed warning of invalid escape sequence 
 
